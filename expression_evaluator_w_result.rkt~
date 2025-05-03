@@ -1,0 +1,37 @@
+#lang racket
+
+(require data/either)
+
+(define (safe-div x y)  ; num num -> maybe num
+  (if (= y 0)
+      (failure "Attempted to divide by 0")
+      (success (/ x y))))
+
+(define in-list?   ; item list -> bool 
+  (λ (x lst)
+    (not (false? (member x lst)))))
+
+
+(define (eval expr)
+  (cond
+    [(equal? (first expr) 'num) (success (second expr))]
+    [(in-list? (first expr) '(div add sub mult))
+     (let(
+          [x (eval (second expr))]
+          [y (eval (third  expr))])
+       (if (or (failure? x) (failure? y))
+           (if (failure? x) x y)
+           (cond
+             [(equal? (first expr) 'div) (safe-div (from-success 1 x) (from-success 1 y))]
+             [(equal? (first expr) 'add) (success(+ (from-success 1 x) (from-success 1 y)))]
+             [(equal? (first expr) 'sub) (success (- (from-success 1 x) (from-success 1 y)))]
+             [else (success(* (from-success 1 x) (from-success 1 y)))])))]
+     [else (failure "unknown operation")]))  ; unknown operation;not an int, not add, sub, mult, or div
+       ; so return nothing
+
+(eval '(div 5 a))
+(eval '(num 5))
+(eval '(add (num 5) (mult (num 2) (num 3))))
+(eval '(sub (num 20) (div (add (mult (num 4) (num 5)) (num 10))(num 6))))
+(eval '(div (num 5) (sub (num 5) (num 5)))) ;nothing (div by 0)
+(eval '(unknown (num 5) (num 3)))

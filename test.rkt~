@@ -1,0 +1,30 @@
+#lang racket
+
+(require data/either)
+
+(define (safe-div x y) ; num num -> (either string? num?)
+  (if (= y 0)
+      (failure "division by zero")
+      (success (/ x y))))
+
+(define (eval expr) ; expr -> (either string? num?)
+  (cond
+    [(equal? (first expr) 'num) (success (second expr))]
+    [(or (equal? (first expr) 'div)
+         (equal? (first expr) 'add)
+         (equal? (first expr) 'sub)
+         (equal? (first expr) 'mult))
+     (do ((x (eval (second expr)))
+          (y (eval (third  expr))))
+       (cond
+         [(equal? (first expr) 'div) (safe-div x y)]
+         [(equal? (first expr) 'add) (success (+ x y))]
+         [(equal? (first expr) 'sub) (success (- x y))]
+         [else (success (* x y))]))]
+    [else (failure "unknown operation")])) ; unknown operation
+
+(eval '(num 5))
+(eval '(add (num 5) (mult (num 2) (num 3))))
+(eval '(sub (num 20) (div (add (mult (num 4) (num 5)) (num 10))(num 6))))
+(eval '(div (num 5) (sub (num 5) (num 5)))) ; failure (div by 0)
+(eval '(unknown-op (num 1) (num 2))) ; failure (unknown operation)
