@@ -14,10 +14,18 @@
 
 (define (eval expr st); expr -> (either string? num?)
   (cond
+
+    ;; handle (num ...)
     [(equal? (first expr) 'num)
      (if (and (= (length expr) 2) (number? (second expr)))
-     (values (success (second expr)) st)
-     (values (failure "invalid num expression") st))]
+     (values (success '((second expr) st))
+     (values (failure "invalid num expression")))]
+
+    ; handle 
+    [(equal? (first expr) 'define)
+     (if (= (length expr) 2))
+     (do
+         [()]
     [(in-list? (first expr) '(div add sub mult))
      ; Use monadic do
      (do
@@ -28,15 +36,16 @@
          [(equal? (first expr) 'div) (safe-div x y)] ; safe-div already returns either
          [(equal? (first expr) 'add) (success (+ x y))] ; Wrap result in success
          [(equal? (first expr) 'sub) (success (- x y))] ; Wrap result in success
-         [else (success (* x y))] ; Wrap result in success
+         [(equal? (first expr) 'mult) (success (* x y))]
          ))]
-
     [else
      (failure "unknown operation")])) ; unknown operation
 
+
 ;; --- Testing ---
 (eval '(num 5))
-(eval '(add '(num 5) (mult '(num 2) '(num 3))))
+(eval '(mult (num 2) (num 3)))
+(eval '(add (num 5) (mult (num 2) (num 3))))
 (eval '(sub (num 20) (div (add (mult (num 4) (num 5)) (num 10)) (num 6))))
 (eval '(div (num 5) (sub (num 5) (num 5))))
 (eval '(unknown-op (num 1) (num 2)))
